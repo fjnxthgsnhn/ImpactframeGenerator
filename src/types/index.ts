@@ -33,6 +33,58 @@ export type AnchorMode =
   | "manual"
   | "center";
 
+/** SVGエフェクトの種類 */
+export type SvgEffectType = "radial-lines" | "shockwave" | "slash" | "lightning";
+
+/** 集中線パラメータ */
+export type RadialLinesParams = {
+  type: "radial-lines";
+  count: number;
+  innerRadius: number;
+  outerRadius: number;
+  jitter: number;
+  opacity: number;
+  color?: string;
+  strokeWidth?: number;
+};
+
+/** 衝撃波パラメータ */
+export type ShockwaveParams = {
+  type: "shockwave";
+  radius: number;
+  irregularity: number;
+  strokeWidth: number;
+  opacity: number;
+  color?: string;
+};
+
+/** 斬撃パラメータ */
+export type SlashParams = {
+  type: "slash";
+  angle: number;
+  length: number;
+  strokeWidth: number;
+  opacity: number;
+  color?: string;
+};
+
+/** 稲妻パラメータ */
+export type LightningParams = {
+  type: "lightning";
+  segments: number;
+  amplitude: number;
+  strokeWidth: number;
+  opacity: number;
+  color?: string;
+};
+
+/** SVGエフェクトパラメータの共用体型 */
+export type SvgEffectParams =
+  | RadialLinesParams
+  | ShockwaveParams
+  | SlashParams
+  | LightningParams;
+
 /** エフェクトステップ */
 export type EffectStep = {
   type: string;
@@ -50,7 +102,16 @@ export type EffectStep = {
   strokeWidth?: number;
   segments?: number;
   amplitude?: number;
+  angle?: number;
+  length?: number;
   [key: string]: unknown;
+};
+
+/** SVG エフェクト生成結果 */
+export type SvgEffectResult = {
+  svgElement: SVGElement;
+  width: number;
+  height: number;
 };
 
 /** プリセットカテゴリ */
