@@ -4,12 +4,14 @@ import type {
   EffectAnchor,
   AnchorMode,
   GeneratedFrame,
+  NormalizeInfo,
 } from "@/types";
 
 type AppActions = {
   setSourceImage: (image: ImageBitmap) => void;
   setNormalizedCanvas: (canvas: OffscreenCanvas) => void;
   setPreviewDataUrl: (dataUrl: string) => void;
+  setNormalizeInfo: (info: NormalizeInfo) => void;
   setAnchor: (anchor: EffectAnchor) => void;
   setAnchorMode: (mode: AnchorMode) => void;
   setAnchorLocked: (locked: boolean) => void;
@@ -28,6 +30,7 @@ const initialState: AppState = {
     sourceImage: null,
     normalizedCanvas: null,
     previewDataUrl: "",
+    normalizeInfo: null,
   },
   anchor: null,
   anchorMode: "auto",
@@ -57,6 +60,11 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   setPreviewDataUrl: (dataUrl) =>
     set((state) => ({
       image: { ...state.image, previewDataUrl: dataUrl },
+    })),
+
+  setNormalizeInfo: (normalizeInfo) =>
+    set((state) => ({
+      image: { ...state.image, normalizeInfo },
     })),
 
   setAnchor: (anchor) => set({ anchor }),

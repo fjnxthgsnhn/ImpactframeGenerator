@@ -80,11 +80,21 @@ export type GeneratedFrame = {
   dataUrl: string;
 };
 
+/** 正規化情報 */
+export type NormalizeInfo = {
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+  resizedWidth: number;
+  resizedHeight: number;
+};
+
 /** 画像入力状態 */
 export type ImageInputState = {
   sourceImage: ImageBitmap | null;
   normalizedCanvas: OffscreenCanvas | null;
   previewDataUrl: string;
+  normalizeInfo: NormalizeInfo | null;
 };
 
 /** アプリケーション全体の状態 */
