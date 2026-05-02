@@ -9,11 +9,13 @@
  *   5. 前景マスクの重心 (foreground)
  *   6. 画像中央 (center)
  *
- * 検出処理は Web Worker 内で実行される
+ * 検出処理は Web Worker 内で実行される（顔・人物検出）
+ * 前景マスク検出はメインスレッドで実行（ImageSegmenter の制約）
  */
 
 import type { EffectAnchor, AnchorMode } from "@/types";
 import { detectWithWorker } from "./detection-with-worker";
+import { detectForeground } from "./foreground-detector";
 
 const CENTER_ANCHOR: EffectAnchor = {
   x: 960,
@@ -24,11 +26,6 @@ const CENTER_ANCHOR: EffectAnchor = {
 
 /**
  * 指定された AnchorMode に基づいて中心点を解決する
- *
- * @param imageBitmap 正規化済み画像 (1920x1080)
- * @param mode アンカーモード
- * @param manualAnchor 手動指定されたアンカー（mode === "manual" の場合に使用）
- * @returns 解決された EffectAnchor
  */
 export async function resolveAnchor(
   imageBitmap: ImageBitmap,
@@ -40,14 +37,12 @@ export async function resolveAnchor(
     return manualAnchor;
   }
 
-  // 2. auto モード: 優先順位に従って自動検出（Worker 内で実行）
+  // 2. auto モード: 優先順位に従って自動検出
   if (mode === "auto" || mode === "face") {
     try {
       const faceAnchor = await detectWithWorker(imageBitmap, "face");
       if (faceAnchor) return faceAnchor;
-    } catch {
-      // 顔検出失敗時は次の手段へ
-    }
+    } catch { /* fallthrough */ }
     if (mode === "face") return CENTER_ANCHOR;
   }
 
@@ -55,9 +50,7 @@ export async function resolveAnchor(
     try {
       const personAnchor = await detectWithWorker(imageBitmap, "person");
       if (personAnchor) return personAnchor;
-    } catch {
-      // 人物検出失敗時は次の手段へ
-    }
+    } catch { /* fallthrough */ }
     if (mode === "person") return CENTER_ANCHOR;
   }
 
@@ -65,18 +58,58 @@ export async function resolveAnchor(
     try {
       const objectAnchor = await detectWithWorker(imageBitmap, "object");
       if (objectAnchor) return objectAnchor;
-    } catch {
-      // 物体検出失敗時は次の手段へ
-    }
+    } catch { /* fallthrough */ }
     if (mode === "object") return CENTER_ANCHOR;
   }
 
-  // 5. 前景マスクの重心 (foreground) - 未実装のためスキップ
-  if (mode === "foreground") {
-    // TODO: 前景セグメンテーション実装後に追加
-    return CENTER_ANCHOR;
+  // 5. 前景マスクの重心 (foreground)
+  if (mode === "auto" || mode === "foreground") {
+    try {
+      const fgAnchor = await detectForeground(imageBitmap);
+      if (fgAnchor) return fgAnchor;
+    } catch { /* fallthrough */ }
+    if (mode === "foreground") return CENTER_ANCHOR;
   }
 
   // 6. 画像中央にフォールバック
   return CENTER_ANCHOR;
+}
+
+/**
+ * すべての検出候補を収集する（E3-05 候補選択 UI 用）
+ * 各モードで検出を試み、成功したものを候補リストとして返す
+ */
+export async function collectAllCandidates(
+  imageBitmap: ImageBitmap,
+): Promise<EffectAnchor[]> {
+  const candidates: EffectAnchor[] = [];
+
+  // 顔検出
+  try {
+    const face = await detectWithWorker(imageBitmap, "face");
+    if (face) candidates.push(face);
+  } catch { /* skip */ }
+
+  // 人物検出
+  try {
+    const person = await detectWithWorker(imageBitmap, "person");
+    if (person && person.source === "person") candidates.push(person);
+  } catch { /* skip */ }
+
+  // 物体検出
+  try {
+    const object = await detectWithWorker(imageBitmap, "object");
+    if (object) candidates.push(object);
+  } catch { /* skip */ }
+
+  // 前景マスク
+  try {
+    const fg = await detectForeground(imageBitmap);
+    if (fg) candidates.push(fg);
+  } catch { /* skip */ }
+
+  // 常に中央を候補に含める
+  candidates.push(CENTER_ANCHOR);
+
+  return candidates;
 }

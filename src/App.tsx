@@ -1,6 +1,10 @@
 import { ImageDropZone } from "@/components/image-drop-zone";
+import { AnchorOverlay } from "@/components/anchor-overlay";
+import { useAppStore } from "@/stores/use-app-store";
 
 function App() {
+  const previewDataUrl = useAppStore((s) => s.image.previewDataUrl);
+
   return (
     <div className="min-h-screen bg-background text-on-background">
       <header className="border-b border-outline-variant px-6 py-4">
@@ -13,6 +17,15 @@ function App() {
           <h2 className="mb-4 text-heading-md font-semibold">画像入力</h2>
           <ImageDropZone />
         </section>
+
+        {previewDataUrl && (
+          <section>
+            <h2 className="mb-4 text-heading-md font-semibold">
+              中心点の指定
+            </h2>
+            <AnchorOverlay />
+          </section>
+        )}
       </main>
     </div>
   );
