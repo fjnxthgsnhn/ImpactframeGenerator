@@ -1,5 +1,7 @@
 import { ImageDropZone } from "@/components/image-drop-zone";
 import { AnchorOverlay } from "@/components/anchor-overlay";
+import { PresetSelector } from "@/components/preset-selector";
+import { GeneratePanel } from "@/components/generate-panel";
 import { useAppStore } from "@/stores/use-app-store";
 
 function App() {
@@ -19,12 +21,22 @@ function App() {
         </section>
 
         {previewDataUrl && (
-          <section>
-            <h2 className="mb-4 text-heading-md font-semibold">
-              中心点の指定
-            </h2>
-            <AnchorOverlay />
-          </section>
+          <>
+            <section>
+              <h2 className="mb-4 text-heading-md font-semibold">
+                中心点の指定
+              </h2>
+              <AnchorOverlay />
+            </section>
+
+            <section>
+              <PresetSelector />
+            </section>
+
+            <section>
+              <GeneratePanel />
+            </section>
+          </>
         )}
       </main>
     </div>
