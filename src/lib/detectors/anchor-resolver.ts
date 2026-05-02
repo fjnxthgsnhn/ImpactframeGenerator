@@ -8,11 +8,12 @@
  *   4. 物体検出 (object)
  *   5. 前景マスクの重心 (foreground)
  *   6. 画像中央 (center)
+ *
+ * 検出処理は Web Worker 内で実行される
  */
 
 import type { EffectAnchor, AnchorMode } from "@/types";
-import { detectFaces } from "./face-detector";
-import { detectPersons } from "./object-detector";
+import { detectWithWorker } from "./detection-with-worker";
 
 const CENTER_ANCHOR: EffectAnchor = {
   x: 960,
@@ -39,10 +40,10 @@ export async function resolveAnchor(
     return manualAnchor;
   }
 
-  // 2. auto モード: 優先順位に従って自動検出
+  // 2. auto モード: 優先順位に従って自動検出（Worker 内で実行）
   if (mode === "auto" || mode === "face") {
     try {
-      const faceAnchor = await detectFaces(imageBitmap);
+      const faceAnchor = await detectWithWorker(imageBitmap, "face");
       if (faceAnchor) return faceAnchor;
     } catch {
       // 顔検出失敗時は次の手段へ
@@ -52,7 +53,7 @@ export async function resolveAnchor(
 
   if (mode === "auto" || mode === "person") {
     try {
-      const personAnchor = await detectPersons(imageBitmap);
+      const personAnchor = await detectWithWorker(imageBitmap, "person");
       if (personAnchor) return personAnchor;
     } catch {
       // 人物検出失敗時は次の手段へ
@@ -62,7 +63,7 @@ export async function resolveAnchor(
 
   if (mode === "auto" || mode === "object") {
     try {
-      const objectAnchor = await detectPersons(imageBitmap);
+      const objectAnchor = await detectWithWorker(imageBitmap, "object");
       if (objectAnchor) return objectAnchor;
     } catch {
       // 物体検出失敗時は次の手段へ
