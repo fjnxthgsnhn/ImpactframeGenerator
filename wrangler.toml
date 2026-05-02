@@ -1,0 +1,6 @@
+name = "impact-frame-generator"
+compatibility_date = "2025-05-02"
+compatibility_flags = ["nodejs_compat"]
+
+[site]
+bucket = "./dist"
