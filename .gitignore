@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# design.md submodule (cloned separately)
+design.md/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
