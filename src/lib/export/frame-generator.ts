@@ -103,9 +103,10 @@ function loadImage(dataUrl: string): Promise<ImageBitmap> {
 
 /**
  * Worker を使ってフレームを生成する
+ * sourceCanvas からフレームごとに新しい ImageBitmap を生成して転送する
  */
 export async function generateFramesWithWorker(
-  sourceImage: ImageBitmap,
+  sourceCanvas: OffscreenCanvas,
   anchor: EffectAnchor,
   effects: EffectStep[],
   frameCount: number,
@@ -161,6 +162,9 @@ export async function generateFramesWithWorker(
 
       return varied;
     });
+
+    // フレームごとに新しい ImageBitmap を生成（transfer 後も元 Canvas は保持される）
+    const sourceImage = await createImageBitmap(sourceCanvas);
 
     // Worker を生成して画像処理を実行
     const worker = new Worker(

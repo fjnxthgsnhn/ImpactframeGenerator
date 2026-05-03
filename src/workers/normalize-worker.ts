@@ -1,6 +1,7 @@
 /**
  * 画像正規化 Web Worker
  * 入力画像を 1920x1080 に cover resize + center crop する
+ * OffscreenCanvas は transfer できないため、ImageBitmap で結果を返す
  */
 
 const OUTPUT_WIDTH = 1920;
@@ -14,7 +15,7 @@ type WorkerMessage = {
 type WorkerResponse =
   | {
       type: "normalized";
-      canvas: OffscreenCanvas;
+      imageBitmap: ImageBitmap;
       scale: number;
       offsetX: number;
       offsetY: number;
@@ -54,12 +55,16 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 
     ctx.drawImage(imageBitmap, offsetX, offsetY, resizedWidth, resizedHeight);
 
-    // ImageBitmap を解放（Worker 内で使用後）
+    // 入力 ImageBitmap を解放
     imageBitmap.close();
+
+    // OffscreenCanvas 自体は transfer できないため、
+    // transferToImageBitmap() で ImageBitmap に変換して返す
+    const normalizedImage = canvas.transferToImageBitmap();
 
     const response: WorkerResponse = {
       type: "normalized",
-      canvas,
+      imageBitmap: normalizedImage,
       scale,
       offsetX,
       offsetY,
@@ -67,7 +72,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
       resizedHeight,
     };
 
-    (self as unknown as Worker).postMessage(response, [canvas]);
+    (self as unknown as Worker).postMessage(response, [normalizedImage]);
   } catch (error) {
     const response: WorkerResponse = {
       type: "error",

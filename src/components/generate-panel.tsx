@@ -35,10 +35,8 @@ export function GeneratePanel() {
     setProgress(0);
 
     try {
-      const sourceImage = normalizedCanvas.transferToImageBitmap();
-
       const frames = await generateFramesWithWorker(
-        sourceImage,
+        normalizedCanvas,
         anchor,
         preset.effects,
         frameCount,
